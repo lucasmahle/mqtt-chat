@@ -1,13 +1,16 @@
 ## Início
+
 Quando uma aba é aberta, é requisitado ao usuário informar qual o id de utilização, assim que confirmado o id, é criada a instância. Lembrando que os usuários disponíveis estão pré definidos diretamente no código.
 
 ## Instância
+
 Quando uma nova instância é criada, é definido o tópico que controla o identificador da instância, que será `{{id}}_control`.
 Por ex:
 `id: 9`
 `tópico: 9_control`
 
 ## Online
+
 Assim que a instância é criada, é enviado para o tópico `users` o seu id. Então, todos as instâncias já criadas recebem a informação que o usuário está online.
 O padrão de envio dessa informação é um json com o seguinte formato:
 ```json
@@ -22,6 +25,7 @@ Sendo status `true` para ONLINE e `false` para OFFLINE.
 A instância quando receba essa informação, altera a lista de usuários onlines com a info do usuário que logou.
 
 ## Offline
+
 Quando o usuário clica no botão de SAIR, é enviado para o tópico `users` a informação de logout.
 O padrão de envio dessa informação é um json com o seguinte formato:
 ```json
@@ -90,7 +94,7 @@ Uma vez a conversa ativa, quando um usuário envia uma mensagem, a instância en
 {
     "from": "foo_control",
     "type": "message",
-    "payload": "Hello Wordl!",
+    "payload": "Hello World!",
     "time": "2021-12-23T20:33:13.471Z"
 }
 ```
@@ -127,11 +131,12 @@ Sendo `id`, o identificador do grupo.
 
 ## Respondendo requisição para entrar no grupo
 
-Assim que o líde receber a informação de requisição para entrada no grupo, ele pode aceitar ou recusar a entrada, após essa ação, será enviada para o usuário solicitante a seguinte informação:
+Assim que o líder receber a informação de requisição para entrada no grupo, ele pode aceitar ou recusar a entrada, após essa ação, será enviada para o usuário solicitante a seguinte informação:
 ```json
 {
     "type": "response",
     "id": "20211226150122",
+    "leader": "foo_control",
     "status": true,
 }
 ```
@@ -160,4 +165,10 @@ Quando o líder resolve apagar o grupo, ele envia para o tópico `groups` um obj
     "id": "20211226150122",
     "leader": "foo_control",
 }
+```
+
+## Startar aplicação
+
+```bash
+$ mosquitto -c ./assets/mosquitto.conf
 ```
