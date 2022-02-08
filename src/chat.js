@@ -17,38 +17,7 @@ class Chat extends ChatTemplate {
             topic
         });
 
-        this.HISTORIC[userId] = [
-            // {
-            //     "from": "1_control",
-            //     "type": "message",
-            //     "payload": "Hello World!",
-            //     "time": "2021-12-23T20:33:13.471Z"
-            // },
-            // {
-            //     "from": "1_control",
-            //     "type": "message",
-            //     "payload": "Hello World!",
-            //     "time": "2021-12-23T20:33:13.471Z"
-            // },
-            // {
-            //     "from": "1_control",
-            //     "type": "message",
-            //     "payload": "Hello World!",
-            //     "time": "2021-12-23T20:33:13.471Z"
-            // },
-            // {
-            //     "from": "1_control",
-            //     "type": "message",
-            //     "payload": "Hello World!",
-            //     "time": "2021-12-23T20:33:13.471Z"
-            // },
-            // {
-            //     "from": "2_control",
-            //     "type": "message",
-            //     "payload": "Hello Dude!!",
-            //     "time": "2021-12-23T20:34:12.471Z"
-            // },
-        ];
+        this.HISTORIC[userId] = [];
     }
 
     addMessage(userId, messageObj) {
