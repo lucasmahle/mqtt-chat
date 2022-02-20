@@ -205,3 +205,28 @@ Quando o líder resolve apagar o grupo, ele envia para o tópico `groups` um obj
 }
 ```
 
+# 5.0 Arquitetura 
+
+## 5.1 index.html
+O index.html contém o front-end da aplicação e injeta os arquivos javascript. 
+## 5.1 bootstrap.js:
+É injetado no index.html, responsável por iniciar a aplicação, chamando o app.js
+## 5.2 app.js
+É a classe controladora da aplicação, 
+- Lê e salva os usuários presentes no users.json 
+- Instancia objetos das classes auth.js, user.js e group.js
+- Define callback para iniciar o fluxo do <b>Capítulo 3.2</b> que ocorre após o login bem sucedido comentado no <b>Capítulo 3.1</b>
+- Define callback para enviar publicas no tópico USERS caso saia da aplicação
+## 5.3 auth.js
+- Armazena o fluxo de login do <b>Capítulo 3.2</b> suas interações com o index.html estão no arquivo user.template.js. 
+- Ao login ser bem sucedido, armazena id do usuário no localStorage da aplicação. Sempre que as outras classes precisarem do id do usuário logado, consultarão o método da auth.js que acessa ao localStorage.
+## 5.4 socket.js
+- Fornece função para criação de tópicos
+- Fornece funções para escutar tópicos
+
+## 5.5 users.js
+- Funções para identificar o tipo de publicações pertinentes aos chats com um único usuário, informados no <b>capítulo 4.0</b> e como reagir a cada tipo de publicação. Conforme explicado no <b>capítulo 3.0</b> e <b>capítulo 4.0</b>
+- As funções que envolvem interações com a tela foram implementadas no arquivo user.template.js. Como por exemplo, quando a solicitação de conversa chega a um usuário, o user.js chama o método do user.template.js que faz a solicitação ser exibida na tela do usuário por meio de interações com o index.html
+## 5.6 groups.js
+- Funções para identificar o tipo de publicações pertinentes aos chats em grupos, informados no <b>capítulo 4.0</b> e como reagir a cada tipo de publicação. Conforme explicado no <b>capítulo 3.0</b> e <b>capítulo 4.0</b>
+- As funções que envolvem interações com a tela foram implementadas no arquivo group.template.js. Como por exemplo, quando o groups.js reconhece que o grupo recebeu uma mensagem nova, ele chama o groups.template.js que é responsável por fazer interações no html para exibir essa mensagem na tela do usuário
