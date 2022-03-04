@@ -19,9 +19,9 @@ Primeiramente informe o id do seu usuário, ele pode ser 1, 2 ou 3 (valores que 
 
 Após o login, o nome dos usuários presentes no arquivo users.json aparecem na tela, ao lado de um círculo vermelho ou verde que identifica se eles estão online ou offline. O usuário pode clicar no nome dos usuários que estão online e enviar uma solicitação de conversa, caso seja aceita, o chat fica disponível para ambos trocarem mensagens.
 
-### 2.3: Chat de grupos
+### 2.3: Grupos
 
-TODO
+Após o login, é possivel criar grupos, pedir permissão para fazer parte de um grupo onde é enviado a solicitação para o lider do grupo, que pode aceitar ou recusar o pedido para participar do grupo, pode ser feita a exclusão do grupo pelo lider do grupo. Não foi implementado um chat para o grupo interagir com mensagens.
 
 # 3.0: Funcionamento interno da aplicação
 
@@ -38,7 +38,7 @@ Após a conexão com o broker ser realizada, também é criado o tópico com o n
 Após o tópico do chat entre dois usuários ser criado, quando qualquer um deles submete a mensagem a aplicação publica no tópico, no formato <b>[Capítulo 4.6]</b> e salva em um array de histórico, armazenando o histórico para caso o usuário abra outro chat e depois reabra o chat que foi ocultado. Essa feature também é útil para caso o usuário receba a mensagem mas o chat não esteja aberto, por exemplo, quando ele está conversando com outra pessoa, nesse caso a conversa aparecerá quando o usuário voltar a abrir o chat cuja mensagem foi recebida.
 
 ### 3.5: Grupos 
-TODO
+Ao ser criado um grupo a aplicação publica no tópico GROUPS, no formato <b>[Capítulo 4.7]</b> assim ficando visivel para todos usuarios, onde um usuario pode fazer a solicitação de entrada no grupo no formato <b>[Capítulo 4.8]</b> onde é feita uma requisicao de entrada no grupo para o lider/criador do grupo que responde a requisição feita no formato <b>[Capítulo 4.9]</b> ao aceitar a entrada do usuario no grupo é feita a atualização da informação, onde é enviado para o tópico GROUPS pelo lider no formato <b>[Capítulo 4.10]</b>, para a exclusão do grupo o lider envia um objeto no formato <b>[Capítulo 4.11]</b> para o tópico GROUPS informando que o grupo foi apagado.
 
 # 4.0: Tópicos e Publicações
 
@@ -228,5 +228,5 @@ O index.html contém o front-end da aplicação e injeta os arquivos javascript.
 - Funções para identificar o tipo de publicações pertinentes aos chats com um único usuário, informados no <b>capítulo 4.0</b> e como reagir a cada tipo de publicação. Conforme explicado no <b>capítulo 3.0</b> e <b>capítulo 4.0</b>
 - As funções que envolvem interações com a tela foram implementadas no arquivo user.template.js. Como por exemplo, quando a solicitação de conversa chega a um usuário, o user.js chama o método do user.template.js que faz a solicitação ser exibida na tela do usuário por meio de interações com o index.html
 ## 5.6 groups.js
-- Funções para identificar o tipo de publicações pertinentes aos chats em grupos, informados no <b>capítulo 4.0</b> e como reagir a cada tipo de publicação. Conforme explicado no <b>capítulo 3.0</b> e <b>capítulo 4.0</b>
-- As funções que envolvem interações com a tela foram implementadas no arquivo group.template.js. Como por exemplo, quando o groups.js reconhece que o grupo recebeu uma mensagem nova, ele chama o groups.template.js que é responsável por fazer interações no html para exibir essa mensagem na tela do usuário
+- Funções para identificar o tipo de publicações pertinentes aos grupos, informados no <b>capítulo 4.0</b> e como reagir a cada tipo de publicação. Conforme explicado no <b>capítulo 3.0</b> e <b>capítulo 4.0</b>
+- As funções que envolvem interações com a tela foram implementadas no arquivo group.template.js. Como por exemplo, quando o groups.js reconhece que um usuario deseja criar, requisitar entrada ou excluir um grupo, ele chama o groups.template.js que é responsável por fazer interações no html para exibir as ações feitas na tela dos usuários
