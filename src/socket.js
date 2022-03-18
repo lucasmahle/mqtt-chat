@@ -35,7 +35,7 @@ class Socket {
     }
 
     createSocket() {
-        this.client = new Paho.Client(SOCKET_IP, SOCKET_PORT, Auth.getUserId());
+        this.client = new Paho.Client(SOCKET_IP, SOCKET_PORT, Auth.getUserId().toString());
 
         this.client.onConnectionLost = (responseObject) => this._onConnectionLost(responseObject);
         this.client.onMessageArrived = (message) => this._onMessageArrived(message);
