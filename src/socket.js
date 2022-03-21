@@ -12,7 +12,8 @@ const PAYLOAD_TYPE = {
     NEW_GROUP: 'new',
     GROUP_REQUEST: 'request',
     GROUP_RESPONSE: 'response',
-    GROUP_UPDATE: 'update'
+    GROUP_UPDATE: 'update',
+    GROUP_MESSAGE: 'group_message'
 }
 
 /**
@@ -35,7 +36,7 @@ class Socket {
     }
 
     createSocket() {
-        this.client = new Paho.Client(SOCKET_IP, SOCKET_PORT, Auth.getUserId());
+        this.client = new Paho.Client(SOCKET_IP, SOCKET_PORT, Auth.getUserId().toString());
 
         this.client.onConnectionLost = (responseObject) => this._onConnectionLost(responseObject);
         this.client.onMessageArrived = (message) => this._onMessageArrived(message);

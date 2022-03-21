@@ -4,7 +4,7 @@ class User extends UserTemplate {
         super();
         this.countRecivedUpdateStatus = 0;
 
-        this.chatInstance = new Chat;
+        this.chatInstance = new Chat(CHAT_CALLBACK_TYPE.USER);
         this.chatInstance.onMessageSent((message) => {
             this._handleSentMessage(message);
         });
@@ -55,7 +55,7 @@ class User extends UserTemplate {
         }
 
         debug('User', `Conversa com id ${id} já solicitando. Renderizando chat com `, App.getUserById(id).name);
-        this.chatInstance.loadChat(id);
+        this.chatInstance.loadUserChat(id);
     }
 
     handleChatResponse(id, response) {
@@ -75,10 +75,6 @@ class User extends UserTemplate {
         const dateTime = new Date;
         const timestamp = `${String(dateTime.getHours()).padStart(2, '0')}${String(dateTime.getMinutes()).padStart(2, '0')}`;
         return `${targetId}_${Auth.getUser().id}_${timestamp}`;
-    }
-
-    _getTimestamp() {
-        return moment().format('YYYY-MM-DDTHH:mm:ss');
     }
 
     _handleSocketReady() {
@@ -104,7 +100,7 @@ class User extends UserTemplate {
             from: User.generateUserTopic(),
             type: PAYLOAD_TYPE.MESSAGE,
             payload: message,
-            time: this._getTimestamp()
+            time: App.getTimestamp()
         };
 
         this._sendObject(obj, topic);

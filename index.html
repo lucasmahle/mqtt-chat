@@ -8,9 +8,9 @@
     <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="./assets/css/style.css">
     <link href="./node_modules/font-awesome/css/font-awesome.min.css" rel="stylesheet" />
-    <!-- <script src="https://code.jquery.com/jquery-1.10.2.min.js"></script> -->
     <script src="./node_modules/jquery/dist/jquery.min.js"></script>
     <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="shortcut icon" href="./assets/favicon.ico" type="image/x-icon">
 </head>
 
 <body>
@@ -50,7 +50,11 @@
                     <div class="chat">
                         <div class="chat-header clearfix">
                             <div class="chat-about">
-                                <h6 class="m-b-0" id="chat-user-name"></h6>
+                                <span class="m-b-0" id="chat-user-name"></span>
+                                <span class="chat-group-leader" id="chat-group-leader"></span>
+                                <span id="group-info">
+                                    <i class="fa fa-info"></i>
+                                </span>
                             </div>
                         </div>
                         <div class="chat-history">
@@ -218,9 +222,28 @@
         </div>
     </div>
 
+    <div class="modal fade" id="group-info-modal" tabindex="-1" role="dialog" aria-labelledby="group-info-modal-label"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <form action="#" method="get" id="group-info-modal-form">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="group-info-modal-label">Informações do grupo</h5>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const enableDebug = true;
         function debug(module, ...args) {
+            if(!enableDebug) return;
             console.log(`[${module}]`, ...args);
         }
     </script>

@@ -2,8 +2,10 @@ class Group extends GroupTemplate {
     constructor() {
         super();
 
-        this.chatInstance = new Chat;
-        this.GROUPS = [];
+        this.chatInstance = new Chat(CHAT_CALLBACK_TYPE.GROUP);
+        this.chatInstance.onMessageSent((message) => {
+            this._handleSentMessage(message);
+        });
 
         this.renderGroups();
         this.setup();
@@ -18,39 +20,43 @@ class Group extends GroupTemplate {
             });
     }
 
-    getGroupById(id) {
-        const group = this.GROUPS.find(group => group.id == id);
+    generateGroupTopic(group) {
+        const leaderId = User.extractId(group.leader);
+        const groupId = group.id;
 
-        return group;
+        return `${leaderId}_${groupId}`;
     }
 
-    updateGroupById(id, props) {
-        for (let i in this.GROUPS) {
-            if (this.GROUPS[i].id != id) continue;
-            const groupToUpdate = this.GROUPS[i];
-            this.GROUPS[i] = {
-                ...groupToUpdate,
-                ...props
-            }
-        }
+    extractInfoFromTopic(topic) {
+        const [leaderId, groupId] = topic.split('_');
+
+        return {
+            leader: leaderId,
+            group: groupId
+        };
     }
 
     handleGroupCreating(name) {
-        this._sendGroupCreation(name)
+        this._sendGroupCreation(name);
     }
 
-    handleGroupInfo(id) {
+    handleGroupChat(id) {
         if (!this._userHasAccessToGroup(id))
             return this._handleRequestGroupAccess(id);
 
-        const group = this.getGroupById(id);
+        this.startConversation(id);
+    }
+
+    startConversation(id) {
+        const group = App.getGroupById(id);
         const groupInfo = {
             ...group,
             leader: App.getUserById(User.extractId(group.leader)),
             members: group.members.map(memberTopic => App.getUserById(User.extractId(memberTopic)))
         };
 
-        this.chatInstance.renderCreateGroupInfo(groupInfo);
+        this.chatInstance.loadGroupChat(id);
+        this.chatInstance.renderGroupInfo(groupInfo);
     }
 
     handleSentGroupRequest(id) {
@@ -58,7 +64,7 @@ class Group extends GroupTemplate {
     }
 
     handleSentGroupResponse(groupId, userId, status) {
-        const group = this.getGroupById(groupId);
+        const group = App.getGroupById(groupId);
         const user = App.getUserById(userId);
 
         this._sendGroupResponse(group, user, status);
@@ -79,7 +85,7 @@ class Group extends GroupTemplate {
     }
 
     _handleRequestGroupAccess(id) {
-        const group = this.getGroupById(id);
+        const group = App.getGroupById(id);
 
         this.openGroupConfirmationModal(group);
     }
@@ -92,8 +98,32 @@ class Group extends GroupTemplate {
             .addListener(User.generateUserTopic(), (payload) => this._onMessageArrived(payload));
     }
 
+    _handleSentMessage(message) {
+        const { id: destinationId, topic } = this.chatInstance.getActiveChatInfo();
+        const { group: groupId } = this.extractInfoFromTopic(topic);
+        const destination = App.getGroupById(groupId);
+        debug('Group', `Mensagem "${message}" será enviado ao grupo: `, destination);
+
+        const payload = this._sendChatMessage(message, topic, groupId);
+        this.chatInstance.addMessage(destinationId, payload);
+    }
+
+    _sendChatMessage(message, topic, groupId) {
+        const obj = {
+            from: User.generateUserTopic(),
+            group: groupId,
+            type: PAYLOAD_TYPE.GROUP_MESSAGE,
+            payload: message,
+            time: App.getTimestamp()
+        };
+
+        this._sendObject(obj, topic);
+
+        return obj;
+    }
+
     _userHasAccessToGroup(groupId) {
-        const group = this.getGroupById(groupId);
+        const group = App.getGroupById(groupId);
         const userTopic = this._getUserTopic();
 
         return (group.leader == userTopic) || group.members.some(memberTopic => memberTopic == userTopic);
@@ -103,7 +133,7 @@ class Group extends GroupTemplate {
         debug('Group', 'Enviando grupos ao usuário recém logado', payload);
 
         const leaderTopic = User.generateUserTopic();
-        const groupsByLeader = this.GROUPS.filter(group => group.leader == leaderTopic);
+        const groupsByLeader = App.getGroupsByLeader(leaderTopic);
 
         for (let group of groupsByLeader) {
             this._sendGroupUpdate(group);
@@ -122,7 +152,7 @@ class Group extends GroupTemplate {
 
     _removeOfflineMemberFromGroups(memberTopic) {
         const leaderTopic = User.generateUserTopic();
-        const groupsByLeader = this.GROUPS.filter(group => group.leader == leaderTopic);
+        const groupsByLeader = App.getGroupsByLeader(leaderTopic);
 
         for (let group of groupsByLeader) {
             const index = group.members.indexOf(memberTopic);
@@ -134,7 +164,8 @@ class Group extends GroupTemplate {
     }
 
     _deleteGroupsByLeader(leaderTopic) {
-        this.GROUPS = this.GROUPS.filter(group => group.leader != leaderTopic);
+        const groups = App.getGroups().filter(group => group.leader != leaderTopic);
+        App.setGroups(groups)
     }
 
     _sendObject(obj, topic) {
@@ -147,7 +178,7 @@ class Group extends GroupTemplate {
     }
 
     _sendGroupRequest(id) {
-        const group = this.getGroupById(id);
+        const group = App.getGroupById(id);
         debug('Group', `Enviando requisição de acesso ao líder do grupo '${group.name}'`);
 
         const obj = {
@@ -196,6 +227,17 @@ class Group extends GroupTemplate {
         this._sendObject(obj, TOPIC.GROUPS);
     }
 
+    _startChat(group, topic) {
+        this.chatInstance.addChat(group.id, topic);
+        this.startConversation(group.id);
+
+        debug('Group', 'Adicionando inscrição no tópico do grupo', topic);
+
+        Socket
+            .getInstance()
+            .addListener(topic, (payload) => this._onMessageArrived(payload));
+    }
+
     // Message proccess 
     _onMessageArrived(payload) {
         switch (payload.type) {
@@ -203,6 +245,7 @@ class Group extends GroupTemplate {
             case PAYLOAD_TYPE.GROUP_REQUEST: return this._proccessGroupRequest(payload);
             case PAYLOAD_TYPE.GROUP_RESPONSE: return this._proccessGroupResponse(payload);
             case PAYLOAD_TYPE.GROUP_UPDATE: return this._proccessGroupUpdate(payload);
+            case PAYLOAD_TYPE.GROUP_MESSAGE: return this._proccessGroupMessage(payload);
             case PAYLOAD_TYPE.CONTROL: return this._proccessUserStatus(payload);
         }
     }
@@ -210,15 +253,22 @@ class Group extends GroupTemplate {
     _proccessGroupCreaction(payload) {
         debug('Group', 'Processando novo grupo criado', payload);
 
-        this.GROUPS.push(payload);
+        const groups = App.getGroups();
+        groups.push(payload);
+        App.setGroups(groups);
 
         this.renderGroups();
+
+        if (payload.leader == User.generateUserTopic()) {
+            const groupTopic = this.generateGroupTopic(payload);
+            this._startChat(payload, groupTopic);
+        }
     }
 
     _proccessGroupRequest(payload) {
         debug('Group', 'Requisição para entrar no grupo', payload);
 
-        const group = this.getGroupById(payload.id);
+        const group = App.getGroupById(payload.id);
         const user = App.getUserById(User.extractId(payload.from));
         this.openGroupRequestModal(group, user)
     }
@@ -226,9 +276,14 @@ class Group extends GroupTemplate {
     _proccessGroupResponse(payload) {
         debug('Group', 'Resposta sobre entrada no grupo', payload);
 
-        const group = this.getGroupById(payload.id);
+        const group = App.getGroupById(payload.id);
         const user = App.getUserById(User.extractId(payload.leader));
         this.openGroupResponseModal(group, user, payload.status);
+
+        if (payload.status) {
+            const groupTopic = this.generateGroupTopic(payload)
+            this._startChat(group, groupTopic);
+        }
     }
 
     _proccessGroupUpdate(payload) {
@@ -236,14 +291,27 @@ class Group extends GroupTemplate {
 
         debug('Group', 'Informação de grupo foi atualizado', payload);
 
-        const groupExists = !!this.getGroupById(payload.id);
+        const groupExists = !!App.getGroupById(payload.id);
 
         if (groupExists)
-            this.updateGroupById(payload.id, payload);
-        else
-            this.GROUPS.push(payload);
+            App.updateGroupById(payload.id, payload);
+        else {
+            const groups = App.getGroups();
+            groups.push(payload);
+            App.setGroups(groups);
+        }
 
         this.renderGroups();
+    }
+
+    _proccessGroupMessage(payload) {
+        if (payload.from == User.generateUserTopic())
+            return;
+
+        const group = App.getGroupById(payload.group);
+
+        debug('Group', `Mensagem no grupo "${group.name}" recebida`, payload);
+        this.chatInstance.addMessage(group.id, payload);
     }
 
     _proccessUserStatus(payload) {
