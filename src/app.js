@@ -4,7 +4,9 @@ const TOPIC = {
 }
 
 const APP_DATA = {
-    USERS: []
+    USERS: [],
+    GROUPS: [],
+    CHAT_TYPE: ''
 }
 
 class App {
@@ -30,6 +32,45 @@ class App {
                 ...props
             }
         }
+    }
+
+    static getGroups() {
+        return APP_DATA.GROUPS;
+    }
+
+    static setGroups(groups) {
+        APP_DATA.GROUPS = groups;
+    }
+
+    static getGroupById(id) {
+        return APP_DATA.GROUPS.find(group => group.id == id);
+    }
+
+    static getGroupsByLeader(id) {
+        return APP_DATA.GROUPS.filter(group => group.leader == id);
+    }
+
+    static updateGroupById(id, props) {
+        for (let i in APP_DATA.GROUPS) {
+            if (APP_DATA.GROUPS[i].id != id) continue;
+            const groupToUpdate = APP_DATA.GROUPS[i];
+            APP_DATA.GROUPS[i] = {
+                ...groupToUpdate,
+                ...props
+            }
+        }
+    }
+
+    static setChatType(type) {
+        APP_DATA.CHAT_TYPE = type;
+    }
+
+    static getChatType(type) {
+        return APP_DATA.CHAT_TYPE;
+    }
+
+    static getTimestamp() {
+        return moment().format('YYYY-MM-DDTHH:mm:ss');
     }
 
     // Public Methods

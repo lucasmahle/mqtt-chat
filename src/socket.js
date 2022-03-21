@@ -12,7 +12,8 @@ const PAYLOAD_TYPE = {
     NEW_GROUP: 'new',
     GROUP_REQUEST: 'request',
     GROUP_RESPONSE: 'response',
-    GROUP_UPDATE: 'update'
+    GROUP_UPDATE: 'update',
+    GROUP_MESSAGE: 'group_message'
 }
 
 /**

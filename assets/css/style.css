@@ -83,9 +83,33 @@ body{
     border-bottom: 2px solid #f4f7f6
 }
 
+.chat .chat-header .chat-group-leader {
+    font-size: 10px;
+}
+
+.chat .chat-header .chat-group-leader::before {
+    display: inline-block;
+    content: "-";
+    margin-right: 5px;
+}
+
+.chat .chat-header #group-info {
+    display: block;
+    text-align: center;
+    float: right;
+    width: 24px;
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 24px;
+    background-color: #6191ff;
+    color: #fff;
+    cursor: pointer;
+}
+
 .chat .chat-header .chat-about {
     float: left;
-    padding-left: 10px
+    padding-left: 10px;
+    width: 100%;
 }
 
 .chat .chat-history {
@@ -133,6 +157,17 @@ body{
 .chat .chat-history .message-data-time {
     color: #434651;
     padding-left: 6px
+}
+
+.chat .chat-history .message-user {
+    color: #434651;
+    font-size: 14px;
+}
+
+.chat .chat-history .message-user::before {
+    display: inline-block;
+    content: '-';
+    margin: 0 10px 0 4px;
 }
 
 .chat .chat-history .message {

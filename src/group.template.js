@@ -1,6 +1,6 @@
 const GROUP_ACTIONS = {
     CREATE: 'create_group',
-    GROUP_INFO: 'group'
+    GROUP_OPEN: 'group'
 }
 
 class GroupTemplate {
@@ -32,16 +32,16 @@ class GroupTemplate {
 
     // Public Methods
     getSortedGroups() {
-        return this.GROUPS
+        return App.getGroups()
             .sort((a, b) => a.name.localeCompare(b.name));
     }
 
     renderGroups() {
-        const template = this.getSortedGroups().map(user => {
+        const template = this.getSortedGroups().map(group => {
             return `
-<li class="clearfix" data-action="group" data-id="${user.id}">
+<li class="clearfix" data-action="group" data-id="${group.id}">
     <div class="about">
-        <div class="name"><i class="fa fa-users"></i> ${user.name}</div>
+        <div class="name"><i class="fa fa-users"></i> ${group.name}</div>
     </div>
 </li>`;
         });
@@ -83,8 +83,8 @@ class GroupTemplate {
 
             if (action == GROUP_ACTIONS.CREATE)
                 this.$groupCreateModal.modal('show');
-            else if (action == GROUP_ACTIONS.GROUP_INFO)
-                this.handleGroupInfo(id);
+            else if (action == GROUP_ACTIONS.GROUP_OPEN)
+                this.handleGroupChat(id);
         });
 
         this.$groupCreateForm.on('submit', (e) => {
