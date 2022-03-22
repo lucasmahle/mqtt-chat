@@ -13,7 +13,7 @@ Em seguida basta subir a aplicação javascript e roda-la em seu navegador. Noss
 
 ### 2.1: Login
 
-Primeiramente informe o id do seu usuário, ele pode ser 1, 2 ou 3 (valores que definimos no arquivo users.json). Após isso você abrirá. Quando você se identifica como usuário, o valor fica salvo no navegador, então vc sempre estará logado com esse usuário a menos que limpe o LocalStorage do navegador. Você pode entrar com mais de um usuário utilizando a janela anônima do navegador ou utilizando outro navegador.
+Primeiramente informe o id do seu usuário, ele pode ser 1, 2 ou 3 (valores que definimos no arquivo users.json). Após isso você abrirá a tela principal aplicação. Quando você se identifica como usuário, o valor fica salvo no navegador, então vc sempre estará logado com esse usuário a menos que limpe o LocalStorage do navegador. Você pode entrar com mais de um usuário utilizando a janela anônima do navegador ou utilizando outro navegador.
 
 ### 2.2: Chat de usuários
 
@@ -26,24 +26,34 @@ Após o login, é possivel criar grupos, pedir permissão para fazer parte de um
 # 3.0: Funcionamento interno da aplicação
 
 ### 3.1: Mosquitto
-O mosquitto configurado pelo projeto em assets/mosquitto.conf ignora conceitos fundamentais de segurança, como a autenticação dos clientes via usuário e senha pois contém a configuração allow_anonymous valorada como true, ele também ignora restrição de postagem por usuário ou assinatura de tópicos por usuário pois não adicionamos ao mosquitto.conf nenhum arquivo relacionado a isso. Por fim, configuramos a conexão como websocket e reservamos a porta 9001 e não explicítamos o ip pois por default ele é 127.0.0.1.
+O broker Eclipse Mosquitto configurado pelo projeto em assets/mosquitto.conf 
+ignora conceitos fundamentais de segurança, como a autenticação dos clientes via usuário e senha pois contém a configuração allow_anonymous valorada como true. Também ignora restrição de postagem por usuário ou assinatura de tópicos por usuário(ACL). Por fim, configuramos a conexão como websocket e reservamos a porta 9001 e não explicítamos o ip pois por default ele é 127.0.0.1.
 
 ### 3.2: Paho
-A versão do Paho para Javascript utilizada é a 1.1.0. Ao publicarmos as mensagens com esta biblioteca, não estamos definindo o QoS pois por default o QoS na publicação de mensagens é 0, logo as conexões não são persistentes (Clean Sessions). Também não estamos informando o QoS ao assinarmos tópicos pois por default o QoS definido é 0. Já na conexão com o Mosquitto estamos definindo o id do usuário no broker como o id do usuário informado por ele mesmo no início da aplicação. Também não estamos definindo o path pois o path definido por default pelo Pahot é /mqtt.
+Utilizamos a versão 1.1.0 da biblioteca Eclipse Paho para Javascript. Com ela, conseguimos publicar e assinar no broker Eclipse Mosquitto.
+- QoS: Ao publicarmos as mensagens ou assinarmos os tópicos não estamos definindo o QoS pois por default do Paho ele é 0, logo as conexões não são persistentes (Clean Sessions) em toda nossa aplicação.
+- Id do Usuário  no Mosquitto: Ao estabelecermos a conexão com o Mosquitto estamos definindo o id do usuário no broker como o id do usuário informado por ele mesmo no início da aplicação. 
+- Path do Broker: Não estamos definindo o path ao conectarmos ao broker pois o path definido por default pelo Pahot é /mqtt.
+- Last Will Message: Não utilizamos o recurso Last Will Message. Logo, caso o publisher fique incomunicável com o broker devido a problemas de rede, ele não é programado para enviar nenhuma mensagem de aviso aos assinantes. 
+- Retain Flag: Não utilizamos a retain flag em nenhum momento, que guarda o estado da mensagem, ou seja, apenas a ultima publicação do tópico e sempre encaminhá-la quando um novo assinante for acionado.
 
-### 3.3: Login
+### 3.3: Tópico
+
+TODO
+
+### 3.4: Login
 A primeira tela exibida ao usuário é a tela de "Login", na qual o usuário deve informar seu Id. Os Ids de usuários válidos estão armazenados no arquivo users.json. Ao receber um Id válido a aplicação exibe a tela de chat e usuários disponíveis no arquivo users.json.
 
-### 3.4: Usuários online/offline
+### 3.5: Usuários online/offline
 Após o Login, a aplicação se conecta com o broker com o protocolo websocket. Quando a conexão é feita, a aplicação passa a assinar o tópico USERS, referente ao status de online ou offline dos usuários e publica que está ONLINE, enviando um pacote com seu ID, tipo CONTROL com status TRUE conforme mostrado no <b>[Capítulo 4.2]</b>. As outras aplicações que assinaram o tópico, ao receber uma publicação nesse formato, atualizam na tela o usuário como online e fazem uma publicação com seu ID e tipo UPDATE<b>[Capítulo 4.4]</b>, os assinantes colocam todos que publicaram como online. Dessa forma o novo usuário sabe quais estão online desde antes de ele assinar o tópico. Também é publicado um pacote com ID, tipo CONTROL com status FALSE caso o usuário feche a aplicação no navegador<b>[Capítulo 4.3]</b>, um callback foi criado para monitorar caso a janela ou guia seja fechada e faz o envio antes da ação acontecer. Com isso os outros assinantes marcam o usuário como offline. 
 
-### 3.5: Iniciação de conversa
+### 3.6: Iniciação de conversa
 Após a conexão com o broker ser realizada, também é criado o tópico com o nome "{idUsuario}_Control"<b>[Capítulo 4.1]</b> e o usuário se inscreve nesse tópico. Caso outro usuário deseje iniciar uma conversa, a aplicação dele enviará uma publicação do tipo CONVERSATION<b>[Capítulo 4.5]</b>. A aplicação do usuário que recebeu a solicitação abrirá uma informará que há um solicitação de conversa na qual ele pode aceitar ou recusar, sua resposta resulta em uma publicação do tipo Conversation_Response <b>[Capítulo 4.5]</b>. Caso seja aceita e criado um novo tópico e ambos os usuários entram nele, o nome do tópico será uma união do id de ambos e o timestamp. Quando um dos usuários desloga, o outro usuário sabe por conta do tópico USERS<b>[Capítulo 4.3]</b> e sai do tópico da conversa. Caso o usuário clique para iniciar a conversa com outro usuário, porém o tópico já existe, as mensagens são exibidas e o tópico não precisa ser recriado.
 
-### 3.6: Troca de mensagems
+### 3.7: Troca de mensagems
 Após o tópico do chat entre dois usuários ser criado, quando qualquer um deles submete a mensagem a aplicação publica no tópico, no formato <b>[Capítulo 4.6]</b> e salva em um array de histórico, armazenando o histórico para caso o usuário abra outro chat e depois reabra o chat que foi ocultado. Essa feature também é útil para caso o usuário receba a mensagem mas o chat não esteja aberto, por exemplo, quando ele está conversando com outra pessoa, nesse caso a conversa aparecerá quando o usuário voltar a abrir o chat cuja mensagem foi recebida.
 
-### 3.7: Grupos 
+### 3.8: Grupos 
 Ao ser criado um grupo a aplicação publica no tópico GROUPS, no formato <b>[Capítulo 4.7]</b> assim ficando visivel para todos usuarios, onde um usuario pode fazer a solicitação de entrada no grupo no formato <b>[Capítulo 4.8]</b> onde é feita uma requisicao de entrada no grupo para o lider/criador do grupo que responde a requisição feita no formato <b>[Capítulo 4.9]</b> ao aceitar a entrada do usuario no grupo é feita a atualização da informação, onde é enviado para o tópico GROUPS pelo lider no formato <b>[Capítulo 4.10]</b>, para a exclusão do grupo o lider envia um objeto no formato <b>[Capítulo 4.11]</b> para o tópico GROUPS informando que o grupo foi apagado.
 
 # 4.0: Tópicos e Publicações
