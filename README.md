@@ -59,7 +59,7 @@ Após o Login, a aplicação se conecta com o broker Eclipe Mosquitto. Quando a 
 Após a conexão com o broker ser realizada, também é criado o tópico com o nome "{idUsuario}_Control"<b>[Capítulo 4.1]</b> e o usuário se inscreve nesse tópico. Caso outro usuário deseje iniciar uma conversa, a aplicação dele enviará uma publicação do tipo CONVERSATION<b>[Capítulo 4.5]</b>. A aplicação do usuário que recebeu a solicitação abrirá uma informará que há um solicitação de conversa na qual ele pode aceitar ou recusar, sua resposta resulta em uma publicação do tipo Conversation_Response <b>[Capítulo 4.5]</b>. Caso seja aceita e criado um novo tópico e ambos os usuários entram nele, o nome do tópico será uma união do id de ambos e o timestamp. Quando um dos usuários desloga, o outro usuário sabe por conta do tópico USERS<b>[Capítulo 4.3]</b> e sai do tópico da conversa. Caso o usuário clique para iniciar a conversa com outro usuário, porém o tópico já existe, as mensagens são exibidas e o tópico não precisa ser recriado.
 
 ### 3.7: Troca de mensagems
-Após o tópico do chat entre dois usuários ser criado, quando qualquer um deles submete a mensagem a aplicação publica no tópico, no formato <b>[Capítulo 4.6]</b> e salva em um array de histórico, armazenando o histórico para caso o usuário abra outro chat e depois reabra o chat que foi ocultado. Essa feature também é útil para caso o usuário receba a mensagem mas o chat não esteja aberto, por exemplo, quando ele está conversando com outra pessoa, nesse caso a conversa aparecerá quando o usuário voltar a abrir o chat cuja mensagem foi recebida. Quando o usuário desloga o chat ativo e a conversa do usuário, a tela é limpa o mesmo acontece com o grupo
+Após o tópico do chat entre dois usuários ser criado, quando qualquer um deles submete a mensagem a aplicação publica no tópico, no formato <b>[Capítulo 4.6]</b> e salva em um array de histórico, armazenando o histórico para caso o usuário abra outro chat e depois reabra o chat que foi ocultado. Essa feature também é útil para caso o usuário receba a mensagem mas o chat não esteja aberto, por exemplo, quando ele está conversando com outra pessoa, nesse caso a conversa aparecerá quando o usuário voltar a abrir o chat cuja mensagem foi recebida.
 
 ### 3.8: Grupos
 Ao ser criado um grupo a aplicação publica no tópico GROUPS, no formato <b>[Capítulo 4.7]</b> assim ficando visivel para todos usuarios, onde um usuario pode fazer a solicitação de entrada no grupo no formato <b>[Capítulo 4.8]</b> onde é feita uma requisicao de entrada no grupo para o lider/criador do grupo que responde a requisição feita no formato <b>[Capítulo 4.9]</b> ao aceitar a entrada do usuario no grupo é feita a atualização da informação, onde é enviado para o tópico GROUPS pelo lider no formato <b>[Capítulo 4.10]</b>, feito isso é possivel enviar mensagens para chegar em todos os usuarios que participam do grupo onde envia com o formato <b>[Capítulo 4.11]</b>, para a exclusão do grupo o lider envia um objeto no formato <b>[Capítulo 4.12]</b> para o tópico GROUPS informando que o grupo foi apagado.
@@ -167,7 +167,7 @@ Uma vez a conversa ativa, quando um usuário envia uma mensagem, a instância en
 
 ## 4.7 Criando novo grupo
 
-Quando um usuário decide criar um grupo, a aplicação irá requisitar o nome do grupo. Após isso, o grupo será criado e será replicado a todos as instâncias pelo tópico `groups`. Também é gerado um `id` para identificar o grupo, esse `id` será formado pelo timestamp no formato `{{id do líder}}_{{ id do grupo }}`.
+Quando um usuário decide criar um grupo, a aplicação irá requisitar o nome do grupo. Após isso, o grupo será criado e será replicado a todos as instâncias pelo tópico `groups`. Também é gerado um `id` para identificar o grupo, esse `id` será formado pelo timestamp no formato `{{ano}}{{mês}}{{dia}}{{hora}}{{minuto}}{{segundo}}`.
 ```json
 {
     "type": "new",
@@ -178,6 +178,7 @@ Quando um usuário decide criar um grupo, a aplicação irá requisitar o nome d
 }
 ```
 Todos que receberem essa informação, atualizarão a lista de grupos, considerando o `id` para evitar duplicidade na atualização de informações.
+Ao criar o novo grupo, o líder passa se inscrever no tópico de mensagens do grupo.
 
 ## 4.8 Requisitando entrada no grupo
 
@@ -203,6 +204,7 @@ Assim que o líder receber a informação de requisição para entrada no grupo,
 }
 ```
 Sendo status `true` para ACEITE e `false` para RECUSADO.
+Caso o usuário que requisitou entrada receber o `status` igual a `true`, ele passa se inscrever no tópico de mensagens do grupo.
 
 ## 4.10 Atualizando informações do grupos
 
@@ -220,15 +222,15 @@ Todos que receberem a informação, vão conseguir atualizar a lista de grupos.
 
 ## 4.11 Enviando mensagens no grupos
 
-Quando um usuario manda uma mensagem em um grupo, envia para o tópico `groups`:
+Quando um usuario manda uma mensagem em um grupo, envia para o tópico do grupo, que é formado `{{id do líder}}_{{ id do grupo }}`:
 
 ```json
 {
-    "from": "foo_control", -> usuário que mandou
-    "group": "123123", -> grupo destino
-    "type": "group_message", -> tipo do pacote
-    "payload": "Hello World!", -> conteúdo do pacote
-    "time": "2021-12-23T20:33:13.471Z" -> tempo
+    "from": "foo_control",
+    "group": "20211226150122",
+    "type": "group_message",
+    "payload": "Hello World!",
+    "time": "2021-12-23T20:33:13.471Z"
 }
 ```
 Todos os integrastes recebem a informação.
