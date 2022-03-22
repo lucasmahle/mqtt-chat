@@ -27,7 +27,10 @@ Após o login, é possivel criar grupos, pedir permissão para fazer parte de um
 
 ### 3.1: Mosquitto
 O broker Eclipse Mosquitto configurado pelo projeto em assets/mosquitto.conf 
-ignora conceitos fundamentais de segurança, como a autenticação dos clientes via usuário e senha pois contém a configuração allow_anonymous valorada como true. Também ignora restrição de postagem por usuário ou assinatura de tópicos por usuário(ACL). Por fim, configuramos a conexão como websocket e reservamos a porta 9001 e não explicítamos o ip pois por default ele é 127.0.0.1.
+- Ip e Porta: Configuramos a conexão como websocket e reservamos a porta 9001 e não explicítamos o ip pois por default ele é 127.0.0.1.
+- Autenticação: Ignora conceitos fundamentais de segurança, como a autenticação dos clientes via usuário e senha pois contém a configuração allow_anonymous valorada como true.
+- Web socket: Faz conexão web socket (conexão full duplex) 
+- ACL: Ignora restrição de postagem por usuário ou assinatura de tópicos por usuário
 
 ### 3.2: Paho
 Utilizamos a versão 1.1.0 da biblioteca Eclipse Paho para Javascript. Com ela, conseguimos publicar e assinar no broker Eclipse Mosquitto.
@@ -38,14 +41,19 @@ Utilizamos a versão 1.1.0 da biblioteca Eclipse Paho para Javascript. Com ela, 
 - Retain Flag: Não utilizamos a retain flag em nenhum momento, que guarda o estado da mensagem, ou seja, apenas a ultima publicação do tópico e sempre encaminhá-la quando um novo assinante for acionado.
 
 ### 3.3: Tópico
+Conforme enunciado do trabalho, criamos um conjunto de tópicos para utilização do chat. Abaixo seguem a lista de tópicos. Contudo essa documentação aprofunda quando e como cada tópico é utilizado nas seções que virão a seguir, como 3.4, 3.5, etc...
 
-TODO
+- Tópico USERS: referente ao status de online ou offline de cada usuário
+- Tópico {idUsuario}_Control: {idUsuario} no caso é uma variável, variando conforme id do usuário da aplicação. Caso outro usuário deseje iniciar uma conversa, a aplicação dele enviará uma publicação do tipo CONVERSATION para esse tópico.
+- Tópico do Chat: o nome do tópico será o id de ambos e o timestamp. Nele que são publicados as mensagens do chat.
+- Tópico Groups: tópico que gerencia os grupos existentes
+- Tópico de Chat do Grupo: o tópico usado para envio de mensagem entre os grupos
 
 ### 3.4: Login
 A primeira tela exibida ao usuário é a tela de "Login", na qual o usuário deve informar seu Id. Os Ids de usuários válidos estão armazenados no arquivo users.json. Ao receber um Id válido a aplicação exibe a tela de chat e usuários disponíveis no arquivo users.json.
 
 ### 3.5: Usuários online/offline
-Após o Login, a aplicação se conecta com o broker com o protocolo websocket. Quando a conexão é feita, a aplicação passa a assinar o tópico USERS, referente ao status de online ou offline dos usuários e publica que está ONLINE, enviando um pacote com seu ID, tipo CONTROL com status TRUE conforme mostrado no <b>[Capítulo 4.2]</b>. As outras aplicações que assinaram o tópico, ao receber uma publicação nesse formato, atualizam na tela o usuário como online e fazem uma publicação com seu ID e tipo UPDATE<b>[Capítulo 4.4]</b>, os assinantes colocam todos que publicaram como online. Dessa forma o novo usuário sabe quais estão online desde antes de ele assinar o tópico. Também é publicado um pacote com ID, tipo CONTROL com status FALSE caso o usuário feche a aplicação no navegador<b>[Capítulo 4.3]</b>, um callback foi criado para monitorar caso a janela ou guia seja fechada e faz o envio antes da ação acontecer. Com isso os outros assinantes marcam o usuário como offline. 
+Após o Login, a aplicação se conecta com o broker Eclipe Mosquitto. Quando a conexão é feita, a aplicação passa a assinar o tópico USERS, referente ao status de online ou offline dos usuários e publica que está ONLINE, enviando um pacote com seu ID, tipo CONTROL com status TRUE conforme mostrado no <b>[Capítulo 4.2]</b>. As outras aplicações que assinaram o tópico, ao receber uma publicação nesse formato, atualizam na tela o usuário como online e fazem uma publicação com seu ID e tipo UPDATE<b>[Capítulo 4.4]</b>, os assinantes colocam todos que publicaram como online. Dessa forma o novo usuário sabe quais estão online desde antes de ele assinar o tópico. Também é publicado um pacote com ID, tipo CONTROL com status FALSE caso o usuário feche a aplicação no navegador<b>[Capítulo 4.3]</b>, um callback foi criado para monitorar caso a janela ou guia seja fechada e faz o envio antes da ação acontecer. Com isso os outros assinantes marcam o usuário como offline. 
 
 ### 3.6: Iniciação de conversa
 Após a conexão com o broker ser realizada, também é criado o tópico com o nome "{idUsuario}_Control"<b>[Capítulo 4.1]</b> e o usuário se inscreve nesse tópico. Caso outro usuário deseje iniciar uma conversa, a aplicação dele enviará uma publicação do tipo CONVERSATION<b>[Capítulo 4.5]</b>. A aplicação do usuário que recebeu a solicitação abrirá uma informará que há um solicitação de conversa na qual ele pode aceitar ou recusar, sua resposta resulta em uma publicação do tipo Conversation_Response <b>[Capítulo 4.5]</b>. Caso seja aceita e criado um novo tópico e ambos os usuários entram nele, o nome do tópico será uma união do id de ambos e o timestamp. Quando um dos usuários desloga, o outro usuário sabe por conta do tópico USERS<b>[Capítulo 4.3]</b> e sai do tópico da conversa. Caso o usuário clique para iniciar a conversa com outro usuário, porém o tópico já existe, as mensagens são exibidas e o tópico não precisa ser recriado.
